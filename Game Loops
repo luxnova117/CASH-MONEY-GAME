@@ -1,2 +1,144 @@
-SUp Game loops
-Same
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.Timer;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+public class Game extends JPanel{
+	static Game game;
+	static Shooter shooter;
+	static ArrayList<Enemy> enemies = new ArrayList<Enemy>();
+	private int totalScore=0;
+	public Game(){
+		addKeyListener(new KeyListener(){
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// TODO Auto-generated method stub
+				shooter.keyPressed(e);
+				
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				// TODO Auto-generated method stub
+				shooter.keyReleased(e);
+				
+			}
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+		});
+		setFocusable(true);
+	}
+	public static void main(String args[]) throws InterruptedException{
+		JFrame frame = new JFrame("Shooter");	
+		game = new Game();
+	//	game.setLayout(new BorderLayout(20,20));
+		JTextPane waveDisplay = new JTextPane();
+		StyledDocument doc = waveDisplay.getStyledDocument(); //stuff found online, still confused
+		SimpleAttributeSet center = new SimpleAttributeSet();
+		StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
+		doc.setParagraphAttributes(0, doc.getLength(), center, false);
+		//frame.add(waveDisplay);
+		game.add(waveDisplay);
+		frame.add(game);	
+		frame.setSize(700,800);
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		shooter = new Shooter(game);
+		game.loadEnemies();	
+		while(true){
+			game.repaint();
+			if(enemies.get(0).isDone()){
+				game.waveOver();
+				if(enemies.size()>0){
+				enemies.get(0).start();
+				}
+				else{
+					game.gameOver();
+				}
+			}
+			Thread.sleep(10);
+		}
+}
+	public void paint(Graphics g) {
+		super.paint(g);
+		Graphics2D g2d = (Graphics2D) g;
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+		shooter.paint(g2d);
+		if(enemies.size()>0){
+		enemies.get(0).paint(g2d);
+			if(enemies.get(0).isDone()){
+				System.out.println("done");
+				paintWave(g);
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		//enemies.get(0).paint(g2d);
+		paintString(g);
+	}
+	public void paintString(Graphics g){
+		if(shooter.threeRoundBurst){
+		g.drawString("Three Round Burst", 0, 500);
+		}
+		else{
+			g.drawString("Single Shot", 0, 500);
+		}
+		if(shooter.homing){
+			g.drawString("Homing Mine", 300, 500);
+		}
+		else{
+			g.drawString("HEAT Missile", 300, 500);
+		}
+		g.drawString("Missiles: "+ shooter.getMissileCount(), 400, 500);
+	}
+	public void paintWave(Graphics g){
+		g.drawString("Next Wave", 100, 100);
+	}
+	public void waveOver(){
+		totalScore += enemies.get(0).getPoint();
+		enemies.remove(0);
+	}
+	public void loadEnemies(){
+		//missileCount = 10;
+		enemies.add(new Enemy(game,shooter,10,1));
+		enemies.add(new Enemy(game,shooter,20,2));
+		enemies.get(0).start();
+	}
+	public void gameOver(){
+		int score = totalScore;
+		JOptionPane.showMessageDialog(this, "Your score: " + score, "Game Over", JOptionPane.PLAIN_MESSAGE);
+		int message = JOptionPane.showConfirmDialog(this, "", "Restart?" ,JOptionPane.YES_NO_OPTION);
+		if(message == JOptionPane.YES_OPTION){
+			totalScore = 0;
+			loadEnemies();
+		}
+		else if(message == JOptionPane.NO_OPTION){
+			System.exit(ABORT);
+		}
+	}
+}
