@@ -1,0 +1,111 @@
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
+
+public class Missile implements Runnable {
+	Shooter shooter;
+	Game game;
+	Enemy enemy;
+	double x;
+	double y;
+	int counter = 1;
+	double deltaX;
+	double deltaY;
+	double direction;
+	int speed = 5;
+	boolean run = true;
+	String type;
+	int length;
+	int width;
+	int penetrationCounter = 0;
+	public Missile(Shooter s, String t, Game g,Enemy e) {
+		shooter = s;
+		game = g;
+		enemy= e;
+		x = shooter.x + 14;
+		y = 500;
+		type = t;
+		if (t.equals("regular")) {
+			length = 30;
+			width = 5;
+		} else {
+			length = 5;
+			width = 5;
+		}
+		Thread t1 = new Thread(this);
+		t1.start();
+	}
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		if (y - 2 < 0) {
+			run = false;
+			shooter.missiles.remove(this);
+		}
+		while (run) {
+			try {
+				if (type.equals("regular")) {
+					move();
+				} else if (type.equals("homing")) {
+					if(enemy.haveTargets()){ //homing mines work in progress
+					homingMove(enemy.getTarget());
+					}
+					y--;
+				}
+				Thread.sleep(20);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void move() {
+		y -= counter;
+		if (y < 495) {
+			counter++;
+		}
+	}
+
+	public void homingMove(PracticeTarget target) { //homing mines work in progress
+			deltaX = target.getX() - x;
+			deltaY = 10 - y;
+			direction = Math.atan(deltaY / deltaX);
+			if(target.getY() < y){
+				y = y - (Math.abs(speed * Math.sin(direction)));
+			}
+			else{
+			y = y + (Math.abs(speed * Math.sin(direction)));
+			}
+			if (target.getX() < x) {
+				x = x - (speed * Math.cos(direction));
+			} else {
+				x = x + (speed * Math.cos(direction));
+			}
+		
+	}
+	
+	public void paint(Graphics2D g2d) {
+		g2d.fillRect((int) (x), (int) y, width, length);
+	}
+
+	public void homingPaint(Graphics2D g2d) {
+		Rectangle2D.Double rect = new Rectangle2D.Double(x, y, width, length);
+		g2d.draw(rect);
+	}
+
+	public Rectangle.Double getBounds() {
+		return new Rectangle.Double(x, y, width, length);
+	}
+	public void penetrationCounter(){
+		penetrationCounter ++;
+		System.out.println(penetrationCounter);
+	}
+	public int getPenetrationCount(){
+		return penetrationCounter;
+	}
+	public void stop() {
+		run = false;
+	}
+}
