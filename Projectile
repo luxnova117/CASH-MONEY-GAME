@@ -1,0 +1,70 @@
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+
+
+public class Projectile implements Runnable{
+	private int x;
+	private int y = 470;
+	Shooter shooter ;
+	boolean run = true;
+	String type;
+	public Projectile(Shooter s, String t){
+		shooter = s;
+		type = t;
+		x = shooter.x + 14;
+		Thread t1 = new Thread(this);
+		t1.start();
+		
+	}
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		if(y-2<0){
+			run = false;
+			shooter.projectiles.remove(this);
+		}
+		while(run){
+			try {
+				move();
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	public void masterPaint(Graphics2D g2d){
+		if(type.equals("single")){
+			singlePaint(g2d);
+		}
+		else if(type.equals("triple")){
+			threeRoundBurstPaint(g2d);
+		}
+	}
+	public void move(){
+		y-=2;
+	}
+	public void singlePaint(Graphics2D g2d){
+		g2d.fillRect(x, y, 5, 10);
+	}
+	public void threeRoundBurstPaint(Graphics2D g2d){
+		g2d.fillRect(x-7, y, 5, 10);
+		g2d.fillRect(x, y, 5, 10);
+		g2d.fillRect(x+7, y, 5, 10);
+	}
+	public Rectangle.Double getBounds(){
+		if(type.equals("single")){
+		return new Rectangle.Double(x,y,5,10);
+		}
+		return new Rectangle.Double(x-7,y,15,10);
+	}
+	public int getX(){
+		return x;
+	}
+	public int getY(){
+		return y;
+	}
+	public void stop(){
+		run = false;
+	}
+}
