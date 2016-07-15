@@ -1,0 +1,141 @@
+import java.awt.Graphics2D;
+
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.ArrayList;
+
+
+public class Shooter implements Runnable,KeyListener{
+	int missileCount = 10;
+	int x = 0;
+	final int Y = 500;
+	double xAddition = 2;
+	double yAddition = 2;
+	private final int DIAMETER = 30;
+	Game game;
+	private int rightEdge;
+	private static boolean pressedLeft = false;
+	private static boolean pressedRight = false;
+	static ArrayList<Projectile> projectiles = new ArrayList<Projectile>();
+	static ArrayList<Missile> missiles = new ArrayList<Missile>();
+	static boolean threeRoundBurst = false;
+	static boolean homing = false;
+	String projectileType = "single";
+	String missileType = "regular";
+	public Shooter(Game g){
+		game = g;
+		Thread t1 = new Thread(this);
+		t1.start();	
+	}
+	@Override
+	public void keyPressed(KeyEvent e) {
+		// TODO Auto-generated method stub
+		if(e.getKeyCode() == KeyEvent.VK_A){
+			moveLeft();
+			pressedLeft = true;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_D){
+			moveRight();
+			pressedRight = true;
+		}	
+		if(e.getKeyCode() == KeyEvent.VK_SPACE){
+			projectiles.add(new Projectile(this,projectileType));	
+		}
+		if(e.getKeyCode() == KeyEvent.VK_Z){
+			if(threeRoundBurst){
+				threeRoundBurst = false;
+				projectileType = "single";
+			}
+			else{
+			threeRoundBurst = true;
+			projectileType = "triple";
+			}
+		}
+		if(e.getKeyCode() == KeyEvent.VK_F){
+			if(missileCount>0){
+			missiles.add(new Missile(this,missileType,game,getEnemy()));
+			missileCount-=1;
+			}
+		}
+//		if(e.getKeyCode() == KeyEvent.VK_Q){                Homing mines work in progress
+//			if(missileType.equals("regular")){
+//				missileType = "homing";
+//				homing = true;
+//			}
+//			else if(missileType.equals("homing")){
+//				missileType = "regular";
+//				homing = false;
+//			}
+//		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		if(e.getKeyCode() == KeyEvent.VK_A){
+			pressedLeft = false;
+		}
+		if(e.getKeyCode() == KeyEvent.VK_D){
+			pressedRight = false;
+		}	
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	public void moveLeft(){
+		if (x > 0 ) {
+			x-=4;
+		}
+	}
+	public void moveRight(){
+		rightEdge = x + 32;
+		if (rightEdge < game.getWidth() ) {
+			x+=4;
+		}
+	}
+	public void paint(Graphics2D g2d){
+		g2d.fillOval(x, Y, DIAMETER, DIAMETER);
+		for(int i = 0; i<projectiles.size(); i++){
+			projectiles.get(i).masterPaint(g2d);
+		}
+		for(int i = 0; i<missiles.size(); i++){
+			if(missiles.get(i).type.equals("regular")){
+			missiles.get(i).paint(g2d);
+			}
+			else{
+				missiles.get(i).homingPaint(g2d);
+			}
+		}
+	}
+	public Enemy getEnemy(){
+		return game.enemies.get(0);
+	}
+	public int getX(){
+		return x;
+	}
+	public int getMissileCount(){
+		return missileCount;
+	}
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		while(true){
+			try {
+				if(pressedLeft){
+					moveLeft();
+				}
+				else if(pressedRight){
+					moveRight();
+				}
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+}
