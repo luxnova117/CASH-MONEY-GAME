@@ -1,0 +1,105 @@
+import java.awt.Graphics2D;
+
+import java.util.ArrayList;
+
+public class Enemy implements Runnable {
+	private static ArrayList<PracticeTarget> pracTarg = new ArrayList<PracticeTarget>();
+	private static ArrayList<SnakeTarget> snakeTarg = new ArrayList<SnakeTarget>();
+	Game game;
+	Shooter shooter;
+	private static boolean run = true;
+	private int count = 0;
+	private int score = 0;
+	private int enemyNumber;
+	private int speed;
+	public Enemy(Game g, Shooter s, int eN, int sp) {
+		game = g;
+		shooter = s;
+		enemyNumber = eN;
+		speed = sp;
+	}
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		while (run && count < enemyNumber) {
+			try {
+				int chance = (int) (Math.random()*100);
+				if(chance<=70){
+				pracTarg.add(new PracticeTarget(this, game, shooter,
+						startLocationGenerator(), speed));
+				count++;
+				}
+				else{
+					int temp = startLocationGenerator();
+					pracTarg.add(new PracticeTarget(this,game,shooter,temp,speed));
+					Thread.sleep(250);
+					pracTarg.add(new PracticeTarget(this,game,shooter,temp,speed));
+					Thread.sleep(250);
+					pracTarg.add(new PracticeTarget(this,game,shooter,temp,speed));
+					count++;
+					
+				}
+				Thread.sleep(1000);
+			
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
+	}
+	public void paint(Graphics2D g2d) {
+		for (int i = 0; i < pracTarg.size(); i++) {
+			pracTarg.get(i).paint(g2d);
+		}
+	}
+	public int startLocationGenerator() {
+		int starter = (int) ((Math.random() * 500));
+		for (int i = 0; i < pracTarg.size(); i++) {
+			if (starter < pracTarg.get(i).getStartLocation() + 20
+					&& starter > pracTarg.get(i).getStartLocation() - 20
+					&& pracTarg.get(i).getY() > 4
+					|| starter > game.getWidth() + 20) {
+				starter = startLocationGenerator();
+			}
+		}
+		return starter;
+	}
+	public boolean isDone(){
+		if(pracTarg.size()==0&&count!=0){
+			return true;
+		}
+		return false;
+	}
+	public void pointCounter(){
+		score++;
+	}
+	public int getPoint() {
+		return score;
+	}
+	public void remove(PracticeTarget a){
+		pracTarg.remove(a);
+	}
+	public static boolean haveTargets(){
+		if(pracTarg.size()>0){
+			return true;
+		}
+		return false;
+	}
+	public void start(){
+		Thread t1 = new Thread(this);
+		t1.start();
+	}
+	
+	public  PracticeTarget getTarget(){
+		PracticeTarget filler = pracTarg.get(0);
+		double distance = Math.sqrt(((shooter.getX() - filler.getX())*(shooter.getX() - filler.getX())) + ((500-filler.getY()*(500-filler.getY()))));
+		for(int i = 0; i<pracTarg.size(); i++){
+			if(Math.sqrt(((shooter.getX() - pracTarg.get(i).getX())*(shooter.getX() - pracTarg.get(i).getX())) + ((500-pracTarg.get(i).getY()*(500-pracTarg.get(i).getY()))))<distance){ //if the next target is closer 
+				distance = Math.sqrt(((shooter.getX() - pracTarg.get(i).getX())*(shooter.getX() - pracTarg.get(i).getX())) + ((500-pracTarg.get(i).getY()*(500-pracTarg.get(i).getY()))));
+				filler = pracTarg.get(i);
+			}
+		}
+		return filler;
+	}
+}
